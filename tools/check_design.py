@@ -362,7 +362,8 @@ def check_links():
             relative = path.relative_to(ROOT)
             target_path = (path.parent / target.split("#", 1)[0]).resolve()
             require(target_path.is_relative_to(ROOT), f"Link escapes repository: {relative}: {target}")
-            require(target_path.is_file(), f"Missing link: {relative}: {target}")
+            # A directory target is a legitimate link; require existence, not a regular file.
+            require(target_path.exists(), f"Missing link: {relative}: {target}")
             count += 1
     return count
 
