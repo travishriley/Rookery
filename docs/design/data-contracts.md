@@ -24,7 +24,7 @@ Phase 1 introduces frozen Python models matching each schema name, strict parsin
 
 A reviewed `Range` is the only thing that bounds a proposed value, so how a range is matched to a change is itself a safety rule. `Range` and `Change` both carry the same `domain` enum. A range authorises a change only when `domain` is equal and `parameter` equals the change's `key` compared as **exact bytes, case-sensitively**. No normalisation, case folding, whitespace trimming, alias table, prefix or fuzzy match may be introduced; an unmatched key is denied, never approximated. `Range.units` must equal `Change.units` by the same comparison, and a change whose units differ from its governing range is denied rather than converted. Units are free text in v0.1.0 because no hardware-specific vocabulary has been reviewed; B06 replaces this with an enumerated unit set before any range is populated.
 
-JSON Schema cannot compare two values in one document, so the following are normative runtime invariants that the typed model and policy must enforce and test independently. The Phase 0 checker does not verify them.
+Standard JSON Schema cannot express sibling numeric ordering or these cross-record joins. The following are normative runtime invariants that the typed model and policy must enforce and test independently. The Phase 0 checker covers the schema-expressible type constraints and exact duplicate entries; it does not implement numeric ordering, range selection, identifier uniqueness across differing objects, or authorization checks.
 
 | Record | Invariant | Failure behaviour |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ JSON Schema cannot compare two values in one document, so the following are norm
 | `CalibrationDefinition` | At most one range per `(domain, parameter)` | Reject the definition; never merge, widen or prefer one silently |
 | `ChangeProposal` | `current_value` and `proposed_value` are the same JSON type, except that a null `current_value` records a key absent from the source | Reject the proposal |
 | `ChangeProposal` | `proposed_value` is finite and, for numeric parameters, within the governing range compared as `Decimal` | Reject the proposal; float comparison at a safety bound is not acceptable |
-| `SourceSnapshot` | `(root_id, path)` is unique across `files` | Reject the snapshot as ambiguous; it cannot become a backup base |
+| `SourceSnapshot` | `(root_id, path)` is unique across `files`, including aliases of the same canonical destination on the target filesystem | Reject the snapshot as ambiguous; it cannot become a backup base. Case-folding filesystems must also reject entries differing only in case |
 | `EvidenceBundle` | `capture.id` is unique across `captures` | Reject the bundle; `Finding.capture_ids` must dereference exactly one capture |
 | `ApprovalRecord` | `approved_at < expires_at`, and both are checked against the evaluation clock at export | Treat as expired |
 

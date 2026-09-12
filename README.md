@@ -30,7 +30,10 @@ The install below writes into whichever environment is currently active; create 
 ```powershell
 python -m pip install -r requirements-design.txt
 python tools/check_design.py
-git diff --cached --check
+python -m unittest discover -s tools -p test_check_design.py
+git diff main...HEAD --check
 ```
+
+The diff command checks the committed PR changes even on a clean checkout. Before committing local edits, also run `git diff --check` and `git diff --cached --check` for unstaged and staged changes respectively.
 
 These checks validate documents and schema shape. They do not validate a printer, slicer runtime, access sandbox, approval authenticity, or physical print quality. Future product acceptance criteria are specifications, not passing test claims.

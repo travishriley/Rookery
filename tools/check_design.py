@@ -8,6 +8,7 @@ import math
 from pathlib import Path
 import re
 import sys
+from urllib.parse import unquote, urlsplit
 
 # datetime.fromisoformat only accepts a trailing "Z" from 3.11; on 3.10 every timestamp
 # would be reported as an invalid format rather than as an unsupported interpreter.
@@ -20,6 +21,7 @@ if sys.version_info < (3, 11):
 
 from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import best_match
+from markdown_it import MarkdownIt
 from referencing import Registry
 from referencing.exceptions import NoSuchResource
 
@@ -172,7 +174,8 @@ def check_examples(schema, examples):
                  "file.json:secret", "..\\outside.json",
                  "NUL", "CON", "PRN", "AUX", "COM1", "LPT1.json", "nul.txt", "CoN",
                  "aux/config.cfg", "dir/NUL",
-                 "process.json.", "process.json ", "dir/", "a//b.json", "a /b.json", "a./b.json"]:
+                 "process.json.", "process.json ", "dir/", "a//b.json", "a /b.json", "a./b.json",
+                 "process.json\n", "process.json\r\n", "dir/\nfile.json"]:
         changed = deepcopy(by_kind["SourceSnapshot"])
         changed["files"][0]["path"] = path
         reject(changed, f"escaping or aliasing path {path}")
@@ -230,6 +233,12 @@ def check_examples(schema, examples):
         changed = deepcopy(by_kind["ChangeProposal"])
         changed["changes"][0]["proposed_value"] = value
         reject(changed, f"proposed value {value!r} disagreeing with the current value type")
+    for current, proposed in [("210", 500), (True, 1)]:
+        changed = deepcopy(by_kind["ChangeProposal"])
+        changed["changes"][0].update(current_value=current, proposed_value=proposed)
+        reject(changed, f"type mismatch from {type(current).__name__} to {type(proposed).__name__}")
+        changed["changes"][0]["proposed_value"] = current
+        accept(changed)
     # A null current_value records a key absent from the source, so type agreement does not
     # apply; only the non-null rule stops the proposal from meaning "delete this key".
     changed = deepcopy(by_kind["ChangeProposal"])
@@ -340,28 +349,34 @@ def check_supplemental(schema, examples):
     return positive, negative
 
 
-def strip_code(text):
-    """Drop fenced and inline code so example link syntax is not checked as a real link."""
-    text = re.sub(r"^```.*?^```", "", text, flags=re.DOTALL | re.MULTILINE)
-    return re.sub(r"`[^`\n]*`", "", text)
+def markdown_targets(text):
+    """Read rendered Markdown links/images without treating code examples as links."""
+    def targets(tokens):
+        for token in tokens:
+            if token.type == "link_open":
+                yield token.attrGet("href")
+            elif token.type == "image":
+                yield token.attrGet("src")
+            if token.children:
+                yield from targets(token.children)
+
+    yield from targets(MarkdownIt("commonmark").enable("table").parse(text))
 
 
-def check_links():
+def check_links(root=ROOT):
     count = 0
     # The supplied prompt is byte-frozen and is never edited to satisfy a link check.
-    files = sorted(path for path in ROOT.rglob("*.md")
+    files = sorted(path for path in root.rglob("*.md")
                    if path.name != "ROOKERY_ASTRA_BUILD_PROMPT.md"
-                   and not any(part.startswith(".") for part in path.relative_to(ROOT).parts))
+                   and not any(part.startswith(".") for part in path.relative_to(root).parts))
     for path in files:
-        text = strip_code(path.read_text(encoding="utf-8"))
-        require(not re.search(r"\]\[[^\]]+\]", text),
-                f"Reference-style link is not validated by this checker: {path.name}")
-        for target in re.findall(r"\[[^\]]*\]\(([^)]+)\)", text):
-            if re.match(r"[a-z]+:", target) or target.startswith("#"):
+        for target in markdown_targets(path.read_text(encoding="utf-8")):
+            url = urlsplit(target)
+            if url.scheme or url.netloc or not url.path:
                 continue
-            relative = path.relative_to(ROOT)
-            target_path = (path.parent / target.split("#", 1)[0]).resolve()
-            require(target_path.is_relative_to(ROOT), f"Link escapes repository: {relative}: {target}")
+            relative = path.relative_to(root)
+            target_path = (path.parent / unquote(url.path)).resolve()
+            require(target_path.is_relative_to(root), f"Link escapes repository: {relative}: {target}")
             # A directory target is a legitimate link; require existence, not a regular file.
             require(target_path.exists(), f"Missing link: {relative}: {target}")
             count += 1
