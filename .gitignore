@@ -1,0 +1,14 @@
+.phase0-local/
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# Private records belong outside the repository; these are secondary safeguards.
+private/
+records/
+backups/
+staging/
+.env
+.env.*
+!.env.example

@@ -1,0 +1,141 @@
+[
+  {
+    "schema_version": "0.1.0", "kind": "PrinterIdentity", "id": "synthetic-printer", "created_at": "2026-09-12T12:00:00Z",
+    "label": "Fictional schema example, no hardware", "firmware": "unknown", "validation_scope": "slicer_only",
+    "hardware_digest": null, "identity_evidence_digests": []
+  },
+  {
+    "schema_version": "0.1.0", "kind": "SourceSnapshot", "id": "synthetic-snapshot", "created_at": "2026-09-12T12:00:00Z",
+    "printer_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "content_manifest_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "capture_started_at": "2026-09-12T11:59:59Z", "capture_finished_at": "2026-09-12T12:00:00Z", "complete": false,
+    "files": [{"root_id": "fixture-root", "path": "process.json", "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "size_bytes": 0, "metadata_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "role": "orca_process"}],
+    "edges": [], "provenance_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "issues": ["Placeholder digests do not identify real source bytes; shape example only."]
+  },
+  {
+    "schema_version": "0.1.0", "kind": "BackupReceipt", "id": "synthetic-failed-backup", "created_at": "2026-09-12T12:00:00Z",
+    "snapshot_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "destination_id": "fake-destination", "failure_domain_id": "fake-domain",
+    "domain_evidence_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "off_device": false, "off_site": false, "full_fidelity": true, "object_id": "synthetic-object", "object_version": "1",
+    "archive_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "encryption_key_ref": "fake-key-reference-not-a-key", "status": "failed", "readback_digest": null,
+    "restore_manifest_digest": null, "verified_at": null, "verification_method": "not_verified", "verifier": "fixture",
+    "failures": ["Synthetic unavailable destination; no backup was performed."]
+  },
+  {
+    "schema_version": "0.1.0", "kind": "CalibrationDefinition", "id": "synthetic-calibration", "created_at": "2026-09-12T12:00:00Z",
+    "name": "Schema-only fictional project", "version": "draft-1",
+    "geometry_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "project_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "license_review_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "orientation_placement_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "feature_manifest_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "ranges": [], "metrics": [{"name": "fictional_quality", "units": "rubric_level", "method": "human_rubric", "lower_bound": 1, "upper_bound": 3, "tolerance": 0}],
+    "budgets": {"max_experiments": 1, "max_requests": 0, "max_retries": 0, "max_frames": 6, "max_tokens": 0, "max_storage_bytes": 1000000, "max_estimated_seconds": 1, "max_material_grams": 1},
+    "controls_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "stop_conditions": ["No licensed project, real review, hardware bounds or physical permission exists."]
+  },
+  {
+    "schema_version": "0.1.0", "kind": "ExperimentManifest", "id": "synthetic-manifest-1", "created_at": "2026-09-12T12:00:00Z",
+    "experiment_id": "synthetic-experiment", "revision": 1, "state": "DISCOVERED",
+    "bindings": {
+      "printer_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_digest": null, "candidate_digest": null, "toolchain_digest": null, "calibration_digest": null,
+      "raw_gcode_digest": null, "effective_settings_digest": null, "evidence_digests": [],
+      "policy_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "prompt_digest": null, "provider": null
+    },
+    "baseline_run_ids": [], "candidate_run_ids": [],
+    "controls_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "rubric_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "budgets": {"max_experiments": 1, "max_requests": 0, "max_retries": 0, "max_frames": 6, "max_tokens": 0, "max_storage_bytes": 1000000, "max_estimated_seconds": 1, "max_material_grams": 1},
+    "backup_receipt_digests": [], "approval_digests": [], "activation_digests": [], "previous_revision_digest": null,
+    "blocking_reasons": ["Synthetic record only; no gates have passed."]
+  },
+  {
+    "schema_version": "0.1.0", "kind": "EvidenceBundle", "id": "synthetic-evidence", "created_at": "2026-09-12T12:00:00Z",
+    "experiment_id": "synthetic-experiment", "run_id": "synthetic-run",
+    "artifact_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "captures": [{
+      "id": "synthetic-front", "run_id": "synthetic-run", "view": "front",
+      "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "media_type": "image/png",
+      "source_video_digest": null, "frame_time_ms": null, "captured_at": "2026-09-12T12:00:00Z",
+      "metadata_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "preprocessing_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "scale_reference": null, "quality_issues": ["No image file exists; synthetic shape example."]
+    }],
+    "measurements": [], "coverage": "incomplete", "bottom_cooled_and_removed_observed": false,
+    "controls_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "issues": ["Missing rear, left, right, top and bottom; all placeholder data."]
+  },
+  {
+    "schema_version": "0.1.0", "kind": "DiagnosticReport", "id": "synthetic-diagnosis", "created_at": "2026-09-12T12:00:00Z",
+    "evidence_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "provider": {"adapter": "replay", "model": "synthetic-no-model-call", "settings_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "capability_receipt_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "output_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"},
+    "prompt_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "preprocessing_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "outcome": "insufficient_evidence", "observations": [], "measured_values": [], "hypotheses": [], "counterevidence": [],
+    "missing_information": ["No physical capture set supplied."], "proposal_digest": null,
+    "confidence_limitations": ["Schema example; no diagnosis was executed."]
+  },
+  {
+    "schema_version": "0.1.0", "kind": "ChangeProposal", "id": "synthetic-proposal", "created_at": "2026-09-12T12:00:00Z",
+    "printer_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "policy_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "changes": [{"domain": "orca_process", "file_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "path": "synthetic/process.json", "key": "fictional_parameter_not_an_orca_key", "current_value": 1, "proposed_value": 2, "units": "fictional_units", "evidence_digests": ["sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"]}],
+    "risk": "bounded_slicer", "expected_outcome": "Schema acceptance only; semantic policy must deny this fictional key.",
+    "alternatives": ["No change"], "tradeoffs": ["No physical meaning"], "confidence_limitations": ["Synthetic values only"],
+    "validation_test": "Reject unknown parameter under the default empty allowlist.",
+    "rollback_snapshot_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  {
+    "schema_version": "0.1.0", "kind": "ApprovalRecord", "id": "synthetic-revoked-approval", "created_at": "2026-09-12T12:00:00Z",
+    "scope": "candidate_export", "bindings": {
+      "printer_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "candidate_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "toolchain_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "calibration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "raw_gcode_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "effective_settings_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "evidence_digests": ["sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"],
+      "policy_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "prompt_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "provider": {"adapter": "replay", "model": "synthetic-no-model-call", "settings_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "capability_receipt_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", "output_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+    },
+    "risk_scope": "bounded_slicer_change", "actor": "fictional-human", "authentication_mode": "local_human",
+    "authentication_evidence_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "review_packet_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "approved_at": "2026-09-12T12:00:00Z", "expires_at": "2026-09-12T12:01:00Z",
+    "rationale": "Fictional, revoked, unauthenticated shape example; grants no authorization.", "revoked": true,
+    "repository_id": null, "review_evidence_digest": null
+  },
+  {
+    "schema_version": "0.1.0", "kind": "ActivationObservation", "id": "synthetic-unknown-activation", "created_at": "2026-09-12T12:00:00Z",
+    "printer_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "source_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "candidate_digest": null,
+    "actor": "fictional-human", "observed_at": "2026-09-12T12:00:00Z", "firmware_scope": "unknown",
+    "loaded_config_digest": null, "runtime_evidence_digests": [],
+    "human_statement_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "verification": "unknown", "limitations": ["No printer connected or activated; shape example only."]
+  },
+  {
+    "schema_version": "0.1.0", "kind": "ExperimentResult", "id": "synthetic-inconclusive-result", "created_at": "2026-09-12T12:00:00Z",
+    "experiment_id": "synthetic-experiment", "bindings": {
+      "printer_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source_digest": null, "candidate_digest": null, "toolchain_digest": null, "calibration_digest": null,
+      "raw_gcode_digest": null, "effective_settings_digest": null, "evidence_digests": [],
+      "policy_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "prompt_digest": null, "provider": null
+    },
+    "baseline_evidence_digests": [], "candidate_evidence_digests": [],
+    "metrics_report_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "controls_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "rubric_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "repetitions": 0, "actual_elapsed_seconds": null, "estimated_seconds": null, "recommendation": "inconclusive",
+    "rationale": "No experiment occurred; fictional schema example.", "limitations": ["No physical evidence"],
+    "related_failed_proposal_digests": [], "retest_rationale": null
+  }
+]

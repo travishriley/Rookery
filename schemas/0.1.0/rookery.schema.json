@@ -1,0 +1,416 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rookery:schema:0.1.0",
+  "title": "Rookery proposed records 0.1.0",
+  "description": "Design shapes only; schema validation does not grant authorization or establish integrity, safety, or physical evidence.",
+  "oneOf": [
+    {"$ref": "#/$defs/PrinterIdentity"},
+    {"$ref": "#/$defs/SourceSnapshot"},
+    {"$ref": "#/$defs/BackupReceipt"},
+    {"$ref": "#/$defs/CalibrationDefinition"},
+    {"$ref": "#/$defs/ExperimentManifest"},
+    {"$ref": "#/$defs/EvidenceBundle"},
+    {"$ref": "#/$defs/DiagnosticReport"},
+    {"$ref": "#/$defs/ChangeProposal"},
+    {"$ref": "#/$defs/ApprovalRecord"},
+    {"$ref": "#/$defs/ActivationObservation"},
+    {"$ref": "#/$defs/ExperimentResult"}
+  ],
+  "$defs": {
+    "Digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "MaybeDigest": {"oneOf": [{"$ref": "#/$defs/Digest"}, {"type": "null"}]},
+    "Digests": {"type": "array", "items": {"$ref": "#/$defs/Digest"}, "uniqueItems": true, "maxItems": 10000},
+    "Id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"},
+    "Text": {"type": "string", "minLength": 1, "maxLength": 16384},
+    "Texts": {"type": "array", "items": {"$ref": "#/$defs/Text"}, "maxItems": 1000},
+    "Time": {"type": "string", "format": "date-time", "pattern": "Z$"},
+    "Path": {"type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[:\\\\])[A-Za-z0-9_./ -]+$"},
+    "Scalar": {"type": ["string", "number", "boolean", "null"]},
+    "Base": {
+      "type": "object",
+      "required": ["schema_version", "kind", "id", "created_at"],
+      "properties": {
+        "schema_version": {"const": "0.1.0"},
+        "kind": {"$ref": "#/$defs/Id"},
+        "id": {"$ref": "#/$defs/Id"},
+        "created_at": {"$ref": "#/$defs/Time"}
+      }
+    },
+    "Provider": {
+      "type": "object", "additionalProperties": false,
+      "required": ["adapter", "model", "settings_digest", "capability_receipt_digest", "output_digest"],
+      "properties": {
+        "adapter": {"enum": ["replay", "openai", "anthropic", "google", "local_vision", "manual_import"]},
+        "model": {"$ref": "#/$defs/Text"},
+        "settings_digest": {"$ref": "#/$defs/Digest"},
+        "capability_receipt_digest": {"$ref": "#/$defs/Digest"},
+        "output_digest": {"$ref": "#/$defs/Digest"}
+      }
+    },
+    "ToolchainManifest": {
+      "type": "object", "additionalProperties": false,
+      "required": ["slicer_version", "executable_digest", "binary_dependency_digests", "os", "architecture", "library_manifest_digest", "plugin_manifest_digest", "postprocessor_manifest_digest", "argv", "resolved_presets_digest", "geometry_digest", "orientation_placement_digest", "capability_receipt_digest", "raw_output_digest"],
+      "properties": {
+        "slicer_version": {"$ref": "#/$defs/Text"}, "executable_digest": {"$ref": "#/$defs/Digest"},
+        "binary_dependency_digests": {"$ref": "#/$defs/Digests"}, "os": {"$ref": "#/$defs/Text"},
+        "architecture": {"$ref": "#/$defs/Text"}, "library_manifest_digest": {"$ref": "#/$defs/Digest"},
+        "plugin_manifest_digest": {"$ref": "#/$defs/Digest"}, "postprocessor_manifest_digest": {"$ref": "#/$defs/Digest"},
+        "argv": {"$ref": "#/$defs/Texts"}, "resolved_presets_digest": {"$ref": "#/$defs/Digest"},
+        "geometry_digest": {"$ref": "#/$defs/Digest"}, "orientation_placement_digest": {"$ref": "#/$defs/Digest"},
+        "capability_receipt_digest": {"$ref": "#/$defs/Digest"}, "raw_output_digest": {"$ref": "#/$defs/Digest"}
+      }
+    },
+    "Bindings": {
+      "type": "object", "additionalProperties": false,
+      "required": ["printer_digest", "source_digest", "candidate_digest", "toolchain_digest", "calibration_digest", "raw_gcode_digest", "effective_settings_digest", "evidence_digests", "policy_digest", "prompt_digest", "provider"],
+      "properties": {
+        "printer_digest": {"$ref": "#/$defs/Digest"},
+        "source_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "candidate_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "toolchain_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "calibration_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "raw_gcode_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "effective_settings_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "evidence_digests": {"$ref": "#/$defs/Digests"},
+        "policy_digest": {"$ref": "#/$defs/Digest"},
+        "prompt_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "provider": {"oneOf": [{"$ref": "#/$defs/Provider"}, {"type": "null"}]}
+      }
+    },
+    "PackageBindings": {
+      "allOf": [{"$ref": "#/$defs/Bindings"}],
+      "properties": {
+        "source_digest": {"$ref": "#/$defs/Digest"},
+        "toolchain_digest": {"$ref": "#/$defs/Digest"},
+        "calibration_digest": {"$ref": "#/$defs/Digest"},
+        "raw_gcode_digest": {"$ref": "#/$defs/Digest"},
+        "effective_settings_digest": {"$ref": "#/$defs/Digest"},
+        "evidence_digests": {"minItems": 1}
+      }
+    },
+    "CandidateBindings": {
+      "allOf": [{"$ref": "#/$defs/PackageBindings"}],
+      "properties": {
+        "candidate_digest": {"$ref": "#/$defs/Digest"},
+        "prompt_digest": {"$ref": "#/$defs/Digest"},
+        "provider": {"$ref": "#/$defs/Provider"}
+      }
+    },
+    "FileEntry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["root_id", "path", "digest", "size_bytes", "metadata_digest", "role"],
+      "properties": {
+        "root_id": {"$ref": "#/$defs/Id"}, "path": {"$ref": "#/$defs/Path"},
+        "digest": {"$ref": "#/$defs/Digest"}, "size_bytes": {"type": "integer", "minimum": 0},
+        "metadata_digest": {"$ref": "#/$defs/Digest"},
+        "role": {"enum": ["orca_printer", "orca_filament", "orca_process", "project", "klipper_config", "saved_variables", "geometry", "other_dependency"]}
+      }
+    },
+    "Edge": {
+      "type": "object", "additionalProperties": false,
+      "required": ["from_digest", "to_digest", "relation", "order"],
+      "properties": {
+        "from_digest": {"$ref": "#/$defs/Digest"}, "to_digest": {"$ref": "#/$defs/Digest"},
+        "relation": {"enum": ["include", "inherits", "override", "saved_state", "asset"]},
+        "order": {"type": "integer", "minimum": 0}
+      }
+    },
+    "Budget": {
+      "type": "object", "additionalProperties": false,
+      "required": ["max_experiments", "max_requests", "max_retries", "max_frames", "max_tokens", "max_storage_bytes", "max_estimated_seconds", "max_material_grams"],
+      "properties": {
+        "max_experiments": {"type": "integer", "minimum": 1},
+        "max_requests": {"type": "integer", "minimum": 0},
+        "max_retries": {"type": "integer", "minimum": 0},
+        "max_frames": {"type": "integer", "minimum": 0},
+        "max_tokens": {"type": "integer", "minimum": 0},
+        "max_storage_bytes": {"type": "integer", "minimum": 1},
+        "max_estimated_seconds": {"type": "number", "exclusiveMinimum": 0},
+        "max_material_grams": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "Range": {
+      "type": "object", "additionalProperties": false,
+      "required": ["parameter", "units", "minimum", "maximum", "review_digest"],
+      "properties": {
+        "parameter": {"$ref": "#/$defs/Text"}, "units": {"$ref": "#/$defs/Text"},
+        "minimum": {"type": "number"}, "maximum": {"type": "number"},
+        "review_digest": {"$ref": "#/$defs/Digest"}
+      }
+    },
+    "Metric": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "units", "method", "lower_bound", "upper_bound", "tolerance"],
+      "properties": {
+        "name": {"$ref": "#/$defs/Text"}, "units": {"$ref": "#/$defs/Text"},
+        "method": {"$ref": "#/$defs/Text"}, "lower_bound": {"type": ["number", "null"]},
+        "upper_bound": {"type": ["number", "null"]}, "tolerance": {"type": "number", "minimum": 0}
+      }
+    },
+    "View": {"enum": ["front", "rear", "left", "right", "top", "bottom"]},
+    "Capture": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "run_id", "view", "digest", "media_type", "source_video_digest", "frame_time_ms", "captured_at", "metadata_digest", "preprocessing_digest", "scale_reference", "quality_issues"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Id"}, "run_id": {"$ref": "#/$defs/Id"}, "view": {"$ref": "#/$defs/View"},
+        "digest": {"$ref": "#/$defs/Digest"}, "media_type": {"enum": ["image/jpeg", "image/png"]},
+        "source_video_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "frame_time_ms": {"type": ["integer", "null"], "minimum": 0},
+        "captured_at": {"$ref": "#/$defs/Time"}, "metadata_digest": {"$ref": "#/$defs/Digest"},
+        "preprocessing_digest": {"$ref": "#/$defs/Digest"}, "scale_reference": {"$ref": "#/$defs/MaybeDigest"},
+        "quality_issues": {"$ref": "#/$defs/Texts"}
+      },
+      "allOf": [{
+        "if": {"properties": {"source_video_digest": {"type": "null"}}},
+        "then": {"properties": {"frame_time_ms": {"type": "null"}}},
+        "else": {"properties": {"frame_time_ms": {"type": "integer", "minimum": 0}}}
+      }]
+    },
+    "Measurement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "value", "units", "method", "source_digest", "uncertainty"],
+      "properties": {
+        "name": {"$ref": "#/$defs/Text"}, "value": {"type": "number"}, "units": {"$ref": "#/$defs/Text"},
+        "method": {"enum": ["manual_caliper", "manual_mass", "imported_sensor", "calibrated_cv", "human_rubric"]},
+        "source_digest": {"$ref": "#/$defs/Digest"}, "uncertainty": {"type": ["number", "null"], "minimum": 0}
+      }
+    },
+    "Finding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["description", "capture_ids", "region", "limitations"],
+      "properties": {
+        "description": {"$ref": "#/$defs/Text"},
+        "capture_ids": {"type": "array", "items": {"$ref": "#/$defs/Id"}, "minItems": 1, "uniqueItems": true},
+        "region": {"$ref": "#/$defs/Text"}, "limitations": {"$ref": "#/$defs/Texts"}
+      }
+    },
+    "Change": {
+      "type": "object", "additionalProperties": false,
+      "required": ["domain", "file_digest", "path", "key", "current_value", "proposed_value", "units", "evidence_digests"],
+      "properties": {
+        "domain": {"enum": ["orca_printer", "orca_filament", "orca_process", "klipper_audit_only"]},
+        "file_digest": {"$ref": "#/$defs/Digest"}, "path": {"$ref": "#/$defs/Path"},
+        "key": {"$ref": "#/$defs/Text"}, "current_value": {"$ref": "#/$defs/Scalar"},
+        "proposed_value": {"$ref": "#/$defs/Scalar"}, "units": {"$ref": "#/$defs/Text"},
+        "evidence_digests": {"allOf": [{"$ref": "#/$defs/Digests"}], "minItems": 1}
+      }
+    },
+    "State": {
+      "enum": ["DISCOVERED", "SNAPSHOT_VERIFIED", "AUDITED", "BASELINE_PACKAGE_REVIEWED", "AWAITING_HUMAN_BASELINE_PRINT", "BASELINE_EVIDENCE_ACCEPTED", "DIAGNOSED", "CANDIDATE_STAGED", "VALIDATED", "AWAITING_APPROVAL", "APPROVED_FOR_EXPORT", "AWAITING_HUMAN_IMPORT_AND_ACTIVATION", "ACTIVATION_OBSERVED", "AWAITING_HUMAN_CANDIDATE_PRINT", "CANDIDATE_EVIDENCE_ACCEPTED", "COMPARED", "PROMOTED", "REJECTED", "INSUFFICIENT_EVIDENCE", "UNSAFE_BASELINE", "APPROVAL_EXPIRED", "CONFIGURATION_DRIFT", "BACKUP_FAILED", "INTERRUPTED", "MANUAL_CHECK_NEEDED", "BUDGET_EXHAUSTED", "NO_CHANGE"]
+    },
+    "PrinterIdentity": {
+      "allOf": [{"$ref": "#/$defs/Base"}], "unevaluatedProperties": false,
+      "required": ["label", "firmware", "validation_scope", "hardware_digest", "identity_evidence_digests"],
+      "properties": {
+        "kind": {"const": "PrinterIdentity"}, "label": {"$ref": "#/$defs/Text"},
+        "firmware": {"enum": ["klipper", "other", "unknown"]},
+        "validation_scope": {"enum": ["slicer_only", "klipper_static", "klipper_observed"]},
+        "hardware_digest": {"$ref": "#/$defs/MaybeDigest"}, "identity_evidence_digests": {"$ref": "#/$defs/Digests"}
+      },
+      "if": {"properties": {"validation_scope": {"enum": ["klipper_static", "klipper_observed"]}}},
+      "then": {"properties": {"firmware": {"const": "klipper"}}}
+    },
+    "SourceSnapshot": {
+      "allOf": [{"$ref": "#/$defs/Base"}], "unevaluatedProperties": false,
+      "required": ["printer_digest", "content_manifest_digest", "capture_started_at", "capture_finished_at", "complete", "files", "edges", "provenance_digest", "issues"],
+      "properties": {
+        "kind": {"const": "SourceSnapshot"}, "printer_digest": {"$ref": "#/$defs/Digest"},
+        "content_manifest_digest": {"$ref": "#/$defs/Digest"}, "capture_started_at": {"$ref": "#/$defs/Time"},
+        "capture_finished_at": {"$ref": "#/$defs/Time"}, "complete": {"type": "boolean"},
+        "files": {"type": "array", "items": {"$ref": "#/$defs/FileEntry"}, "minItems": 1, "maxItems": 10000},
+        "edges": {"type": "array", "items": {"$ref": "#/$defs/Edge"}, "maxItems": 100000},
+        "provenance_digest": {"$ref": "#/$defs/Digest"}, "issues": {"$ref": "#/$defs/Texts"}
+      }
+    },
+    "BackupReceipt": {
+      "allOf": [{"$ref": "#/$defs/Base"}], "unevaluatedProperties": false,
+      "required": ["snapshot_digest", "destination_id", "failure_domain_id", "domain_evidence_digest", "off_device", "off_site", "full_fidelity", "object_id", "object_version", "archive_digest", "encryption_key_ref", "status", "readback_digest", "restore_manifest_digest", "verified_at", "verification_method", "verifier", "failures"],
+      "properties": {
+        "kind": {"const": "BackupReceipt"}, "snapshot_digest": {"$ref": "#/$defs/Digest"},
+        "destination_id": {"$ref": "#/$defs/Id"}, "failure_domain_id": {"$ref": "#/$defs/Id"},
+        "domain_evidence_digest": {"$ref": "#/$defs/Digest"}, "off_device": {"type": "boolean"},
+        "off_site": {"type": "boolean"}, "full_fidelity": {"type": "boolean"},
+        "object_id": {"$ref": "#/$defs/Text"}, "object_version": {"$ref": "#/$defs/Text"},
+        "archive_digest": {"$ref": "#/$defs/Digest"}, "encryption_key_ref": {"$ref": "#/$defs/Id"},
+        "status": {"enum": ["pending", "verified", "failed"]}, "readback_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "restore_manifest_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "verified_at": {"oneOf": [{"$ref": "#/$defs/Time"}, {"type": "null"}]},
+        "verification_method": {"enum": ["not_verified", "readback_and_temporary_restore"]},
+        "verifier": {"$ref": "#/$defs/Id"}, "failures": {"$ref": "#/$defs/Texts"}
+      },
+      "if": {"properties": {"status": {"const": "verified"}}},
+      "then": {"properties": {
+        "readback_digest": {"$ref": "#/$defs/Digest"}, "restore_manifest_digest": {"$ref": "#/$defs/Digest"},
+        "verified_at": {"$ref": "#/$defs/Time"}, "verification_method": {"const": "readback_and_temporary_restore"},
+        "failures": {"maxItems": 0}
+      }}
+    },
+    "CalibrationDefinition": {
+      "allOf": [{"$ref": "#/$defs/Base"}], "unevaluatedProperties": false,
+      "required": ["name", "version", "geometry_digest", "project_digest", "license_review_digest", "orientation_placement_digest", "feature_manifest_digest", "ranges", "metrics", "budgets", "controls_digest", "stop_conditions"],
+      "properties": {
+        "kind": {"const": "CalibrationDefinition"}, "name": {"$ref": "#/$defs/Text"}, "version": {"$ref": "#/$defs/Id"},
+        "geometry_digest": {"$ref": "#/$defs/Digest"}, "project_digest": {"$ref": "#/$defs/Digest"},
+        "license_review_digest": {"$ref": "#/$defs/Digest"}, "orientation_placement_digest": {"$ref": "#/$defs/Digest"},
+        "feature_manifest_digest": {"$ref": "#/$defs/Digest"},
+        "ranges": {"type": "array", "items": {"$ref": "#/$defs/Range"}, "maxItems": 100},
+        "metrics": {"type": "array", "items": {"$ref": "#/$defs/Metric"}, "minItems": 1, "maxItems": 100},
+        "budgets": {"$ref": "#/$defs/Budget"}, "controls_digest": {"$ref": "#/$defs/Digest"},
+        "stop_conditions": {"allOf": [{"$ref": "#/$defs/Texts"}], "minItems": 1}
+      }
+    },
+    "ExperimentManifest": {
+      "allOf": [{"$ref": "#/$defs/Base"}], "unevaluatedProperties": false,
+      "required": ["experiment_id", "revision", "state", "bindings", "baseline_run_ids", "candidate_run_ids", "controls_digest", "rubric_digest", "budgets", "backup_receipt_digests", "approval_digests", "activation_digests", "previous_revision_digest", "blocking_reasons"],
+      "properties": {
+        "kind": {"const": "ExperimentManifest"}, "experiment_id": {"$ref": "#/$defs/Id"},
+        "revision": {"type": "integer", "minimum": 1}, "state": {"$ref": "#/$defs/State"},
+        "bindings": {"$ref": "#/$defs/Bindings"},
+        "baseline_run_ids": {"type": "array", "items": {"$ref": "#/$defs/Id"}, "uniqueItems": true},
+        "candidate_run_ids": {"type": "array", "items": {"$ref": "#/$defs/Id"}, "uniqueItems": true},
+        "controls_digest": {"$ref": "#/$defs/Digest"}, "rubric_digest": {"$ref": "#/$defs/Digest"},
+        "budgets": {"$ref": "#/$defs/Budget"}, "backup_receipt_digests": {"$ref": "#/$defs/Digests"},
+        "approval_digests": {"$ref": "#/$defs/Digests"}, "activation_digests": {"$ref": "#/$defs/Digests"},
+        "previous_revision_digest": {"$ref": "#/$defs/MaybeDigest"}, "blocking_reasons": {"$ref": "#/$defs/Texts"}
+      }
+    },
+    "EvidenceBundle": {
+      "allOf": [{"$ref": "#/$defs/Base"}], "unevaluatedProperties": false,
+      "required": ["experiment_id", "run_id", "artifact_digest", "captures", "measurements", "coverage", "bottom_cooled_and_removed_observed", "controls_digest", "issues"],
+      "properties": {
+        "kind": {"const": "EvidenceBundle"}, "experiment_id": {"$ref": "#/$defs/Id"},
+        "run_id": {"$ref": "#/$defs/Id"}, "artifact_digest": {"$ref": "#/$defs/Digest"},
+        "captures": {"type": "array", "items": {"$ref": "#/$defs/Capture"}, "maxItems": 1000},
+        "measurements": {"type": "array", "items": {"$ref": "#/$defs/Measurement"}, "maxItems": 1000},
+        "coverage": {"enum": ["incomplete", "complete", "invalid"]},
+        "bottom_cooled_and_removed_observed": {"type": "boolean"},
+        "controls_digest": {"$ref": "#/$defs/Digest"}, "issues": {"$ref": "#/$defs/Texts"}
+      },
+      "if": {"properties": {"coverage": {"const": "complete"}}},
+      "then": {"properties": {
+        "bottom_cooled_and_removed_observed": {"const": true}, "issues": {"maxItems": 0},
+        "captures": {"minItems": 6, "items": {"properties": {"quality_issues": {"maxItems": 0}}}, "allOf": [
+          {"contains": {"properties": {"view": {"const": "front"}}, "required": ["view"]}},
+          {"contains": {"properties": {"view": {"const": "rear"}}, "required": ["view"]}},
+          {"contains": {"properties": {"view": {"const": "left"}}, "required": ["view"]}},
+          {"contains": {"properties": {"view": {"const": "right"}}, "required": ["view"]}},
+          {"contains": {"properties": {"view": {"const": "top"}}, "required": ["view"]}},
+          {"contains": {"properties": {"view": {"const": "bottom"}}, "required": ["view"]}}
+        ]}
+      }}
+    },
+    "DiagnosticReport": {
+      "allOf": [{"$ref": "#/$defs/Base"}], "unevaluatedProperties": false,
+      "required": ["evidence_digest", "source_digest", "provider", "prompt_digest", "preprocessing_digest", "outcome", "observations", "measured_values", "hypotheses", "counterevidence", "missing_information", "proposal_digest", "confidence_limitations"],
+      "properties": {
+        "kind": {"const": "DiagnosticReport"}, "evidence_digest": {"$ref": "#/$defs/Digest"},
+        "source_digest": {"$ref": "#/$defs/Digest"}, "provider": {"$ref": "#/$defs/Provider"},
+        "prompt_digest": {"$ref": "#/$defs/Digest"}, "preprocessing_digest": {"$ref": "#/$defs/Digest"},
+        "outcome": {"enum": ["no_change", "insufficient_evidence", "manual_hardware_check", "propose_bounded_change"]},
+        "observations": {"type": "array", "items": {"$ref": "#/$defs/Finding"}, "maxItems": 1000},
+        "measured_values": {"type": "array", "items": {"$ref": "#/$defs/Measurement"}, "maxItems": 1000},
+        "hypotheses": {"$ref": "#/$defs/Texts"}, "counterevidence": {"$ref": "#/$defs/Texts"},
+        "missing_information": {"$ref": "#/$defs/Texts"}, "proposal_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "confidence_limitations": {"allOf": [{"$ref": "#/$defs/Texts"}], "minItems": 1}
+      },
+      "if": {"properties": {"outcome": {"const": "propose_bounded_change"}}},
+      "then": {"properties": {"proposal_digest": {"$ref": "#/$defs/Digest"}}},
+      "else": {"properties": {"proposal_digest": {"type": "null"}}}
+    },
+    "ProposalPayload": {
+      "type": "object",
+      "required": ["printer_digest", "source_digest", "policy_digest", "changes", "risk", "expected_outcome", "alternatives", "tradeoffs", "confidence_limitations", "validation_test", "rollback_snapshot_digest"],
+      "properties": {
+        "printer_digest": {"$ref": "#/$defs/Digest"},
+        "source_digest": {"$ref": "#/$defs/Digest"}, "policy_digest": {"$ref": "#/$defs/Digest"},
+        "changes": {"type": "array", "items": {"$ref": "#/$defs/Change"}, "minItems": 1, "maxItems": 1},
+        "risk": {"enum": ["bounded_slicer", "elevated_proposal_only"]},
+        "expected_outcome": {"$ref": "#/$defs/Text"}, "alternatives": {"$ref": "#/$defs/Texts"},
+        "tradeoffs": {"$ref": "#/$defs/Texts"}, "confidence_limitations": {"$ref": "#/$defs/Texts"},
+        "validation_test": {"$ref": "#/$defs/Text"}, "rollback_snapshot_digest": {"$ref": "#/$defs/Digest"}
+      },
+      "if": {"properties": {"risk": {"const": "bounded_slicer"}}},
+      "then": {"properties": {"changes": {"items": {"properties": {"domain": {"enum": ["orca_printer", "orca_filament", "orca_process"]}}}}}}
+    },
+    "ChangeProposal": {
+      "allOf": [{"$ref": "#/$defs/Base"}, {"$ref": "#/$defs/ProposalPayload"}],
+      "unevaluatedProperties": false,
+      "properties": {"kind": {"const": "ChangeProposal"}}
+    },
+    "DiagnosticResponse": {
+      "type": "object", "additionalProperties": false,
+      "required": ["outcome", "observations", "measured_values", "hypotheses", "counterevidence", "missing_information", "confidence_limitations", "proposal"],
+      "properties": {
+        "outcome": {"enum": ["no_change", "insufficient_evidence", "manual_hardware_check", "propose_bounded_change"]},
+        "observations": {"type": "array", "items": {"$ref": "#/$defs/Finding"}, "maxItems": 1000},
+        "measured_values": {"type": "array", "items": {"$ref": "#/$defs/Measurement"}, "maxItems": 1000},
+        "hypotheses": {"$ref": "#/$defs/Texts"}, "counterevidence": {"$ref": "#/$defs/Texts"},
+        "missing_information": {"$ref": "#/$defs/Texts"},
+        "confidence_limitations": {"allOf": [{"$ref": "#/$defs/Texts"}], "minItems": 1},
+        "proposal": {"oneOf": [{"allOf": [{"$ref": "#/$defs/ProposalPayload"}], "unevaluatedProperties": false}, {"type": "null"}]}
+      },
+      "if": {"properties": {"outcome": {"const": "propose_bounded_change"}}},
+      "then": {"properties": {"proposal": {"type": "object", "properties": {"risk": {"const": "bounded_slicer"}}}}},
+      "else": {"properties": {"proposal": {"type": "null"}}}
+    },
+    "ApprovalRecord": {
+      "unevaluatedProperties": false,
+      "required": ["scope", "bindings", "risk_scope", "actor", "authentication_mode", "authentication_evidence_digest", "review_packet_digest", "approved_at", "expires_at", "rationale", "revoked", "repository_id", "review_evidence_digest"],
+      "properties": {
+        "kind": {"const": "ApprovalRecord"}, "scope": {"enum": ["baseline_package_review", "candidate_export", "test_package_review"]},
+        "bindings": {"$ref": "#/$defs/PackageBindings"}, "risk_scope": {"enum": ["baseline_review", "bounded_slicer_change"]},
+        "actor": {"$ref": "#/$defs/Id"}, "authentication_mode": {"enum": ["local_human", "github_human"]},
+        "authentication_evidence_digest": {"$ref": "#/$defs/Digest"}, "review_packet_digest": {"$ref": "#/$defs/Digest"},
+        "approved_at": {"$ref": "#/$defs/Time"}, "expires_at": {"$ref": "#/$defs/Time"},
+        "rationale": {"$ref": "#/$defs/Text"}, "revoked": {"type": "boolean"},
+        "repository_id": {"type": ["integer", "null"], "minimum": 1}, "review_evidence_digest": {"$ref": "#/$defs/MaybeDigest"}
+      },
+      "allOf": [
+        {"$ref": "#/$defs/Base"},
+        {"if": {"properties": {"scope": {"const": "baseline_package_review"}}}, "then": {"properties": {"bindings": {"properties": {"candidate_digest": {"type": "null"}}}, "risk_scope": {"const": "baseline_review"}}}},
+        {"if": {"properties": {"scope": {"enum": ["candidate_export", "test_package_review"]}}}, "then": {"properties": {"bindings": {"$ref": "#/$defs/CandidateBindings"}, "risk_scope": {"const": "bounded_slicer_change"}}}},
+        {"if": {"properties": {"authentication_mode": {"const": "github_human"}}}, "then": {"properties": {"repository_id": {"type": "integer", "minimum": 1}, "review_evidence_digest": {"$ref": "#/$defs/Digest"}}}}
+      ]
+    },
+    "ActivationObservation": {
+      "unevaluatedProperties": false,
+      "required": ["printer_digest", "source_digest", "candidate_digest", "actor", "observed_at", "firmware_scope", "loaded_config_digest", "runtime_evidence_digests", "human_statement_digest", "verification", "limitations"],
+      "properties": {
+        "kind": {"const": "ActivationObservation"}, "printer_digest": {"$ref": "#/$defs/Digest"},
+        "source_digest": {"$ref": "#/$defs/Digest"}, "candidate_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "actor": {"$ref": "#/$defs/Id"}, "observed_at": {"$ref": "#/$defs/Time"},
+        "firmware_scope": {"enum": ["slicer_only", "klipper_observed", "unknown"]},
+        "loaded_config_digest": {"$ref": "#/$defs/MaybeDigest"}, "runtime_evidence_digests": {"$ref": "#/$defs/Digests"},
+        "human_statement_digest": {"$ref": "#/$defs/Digest"}, "verification": {"enum": ["matched", "mismatch", "unknown"]},
+        "limitations": {"$ref": "#/$defs/Texts"}
+      },
+      "allOf": [
+        {"$ref": "#/$defs/Base"},
+        {"if": {"properties": {"verification": {"const": "matched"}}}, "then": {"properties": {"firmware_scope": {"enum": ["slicer_only", "klipper_observed"]}}}},
+        {"if": {"properties": {"verification": {"const": "matched"}, "firmware_scope": {"const": "klipper_observed"}}}, "then": {"properties": {"loaded_config_digest": {"$ref": "#/$defs/Digest"}, "runtime_evidence_digests": {"minItems": 1}}}}
+      ]
+    },
+    "ExperimentResult": {
+      "allOf": [{"$ref": "#/$defs/Base"}], "unevaluatedProperties": false,
+      "required": ["experiment_id", "bindings", "baseline_evidence_digests", "candidate_evidence_digests", "metrics_report_digest", "controls_digest", "rubric_digest", "repetitions", "actual_elapsed_seconds", "estimated_seconds", "recommendation", "rationale", "limitations", "related_failed_proposal_digests", "retest_rationale"],
+      "properties": {
+        "kind": {"const": "ExperimentResult"}, "experiment_id": {"$ref": "#/$defs/Id"},
+        "bindings": {"$ref": "#/$defs/Bindings"}, "baseline_evidence_digests": {"$ref": "#/$defs/Digests"},
+        "candidate_evidence_digests": {"$ref": "#/$defs/Digests"}, "metrics_report_digest": {"$ref": "#/$defs/Digest"},
+        "controls_digest": {"$ref": "#/$defs/Digest"}, "rubric_digest": {"$ref": "#/$defs/Digest"},
+        "repetitions": {"type": "integer", "minimum": 0},
+        "actual_elapsed_seconds": {"type": ["number", "null"], "minimum": 0},
+        "estimated_seconds": {"type": ["number", "null"], "minimum": 0},
+        "recommendation": {"enum": ["promoted", "rejected", "no_change", "inconclusive"]},
+        "rationale": {"$ref": "#/$defs/Text"}, "limitations": {"$ref": "#/$defs/Texts"},
+        "related_failed_proposal_digests": {"$ref": "#/$defs/Digests"},
+        "retest_rationale": {"oneOf": [{"$ref": "#/$defs/Text"}, {"type": "null"}]}
+      },
+      "if": {"properties": {"recommendation": {"const": "promoted"}}},
+      "then": {"properties": {
+        "bindings": {"$ref": "#/$defs/CandidateBindings"}, "repetitions": {"minimum": 1},
+        "baseline_evidence_digests": {"minItems": 1}, "candidate_evidence_digests": {"minItems": 1}
+      }}
+    }
+  }
+}

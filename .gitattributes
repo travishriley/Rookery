@@ -1,0 +1,6 @@
+* text=auto
+*.md text eol=lf
+*.json text eol=lf
+*.py text eol=lf
+# Preserve the supplied requirements artifact byte-for-byte.
+ROOKERY_ASTRA_BUILD_PROMPT.md -text
