@@ -7,8 +7,19 @@ import json
 import math
 from pathlib import Path
 import re
+import sys
+
+# datetime.fromisoformat only accepts a trailing "Z" from 3.11; on 3.10 every timestamp
+# would be reported as an invalid format rather than as an unsupported interpreter.
+if sys.version_info < (3, 11):
+    raise SystemExit(
+        "check_design.py requires Python 3.11 or newer "
+        "(datetime.fromisoformat must accept a 'Z' suffix); running "
+        f"{sys.version_info.major}.{sys.version_info.minor}"
+    )
 
 from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema.exceptions import best_match
 from referencing import Registry
 from referencing.exceptions import NoSuchResource
 
@@ -20,6 +31,7 @@ KINDS = {
     "ApprovalRecord", "ActivationObservation", "ExperimentResult",
 }
 PROMPT_HASH = "1a43def02cdd4ab169de593217dc7ca595950c18bd2991a6ddb5a4090763fa4e"
+EXAMPLE_DIGEST = "sha256:" + "7" * 64
 
 
 def require(condition, message):
@@ -61,9 +73,24 @@ def utc_datetime(value):
     # The wire format intentionally uses a UTC subset supported by datetime.
     if not isinstance(value, str):
         return True
+    # The regex pins the offset to UTC, so only the calendar remains to be checked.
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z", value):
         return False
-    return datetime.fromisoformat(value).utcoffset().total_seconds() == 0
+    # fromisoformat raises ValueError on impossible dates and on leap seconds; the
+    # raises=ValueError declaration above turns that into a format failure.
+    datetime.fromisoformat(value)
+    return True
+
+
+def make_validator(schema):
+    return Draft202012Validator(schema, format_checker=FORMATS, registry=Registry(retrieve=no_remote_schema))
+
+
+def subschema(schema, name):
+    """Validate one named $def in isolation, without inheriting the document's $id."""
+    branch = {key: value for key, value in schema.items() if key != "$id"}
+    branch["oneOf"] = [{"$ref": f"#/$defs/{name}"}]
+    return branch
 
 
 def check_refs(node, schema):
@@ -82,8 +109,20 @@ def check_refs(node, schema):
     return count
 
 
+def explain(schema, value):
+    """Name the offending field. The root oneOf has no discriminator, so dispatch on kind first."""
+    kind = value.get("kind") if isinstance(value, dict) else None
+    if kind not in KINDS:
+        return "unknown record kind"
+    failure = best_match(make_validator(subschema(schema, kind)).iter_errors(value))
+    if failure is None:
+        return "valid against its own kind but not against the record union"
+    location = "/".join(str(part) for part in failure.absolute_path) or "(record root)"
+    return f"{location}: {failure.message}"
+
+
 def check_examples(schema, examples):
-    validator = Draft202012Validator(schema, format_checker=FORMATS, registry=Registry(retrieve=no_remote_schema))
+    validator = make_validator(schema)
     require({item["kind"] for item in examples} == KINDS, "Eleven record kinds must have examples")
     require(len(examples) == len(KINDS), "Exactly one example per record kind is expected")
     by_kind = {item["kind"]: item for item in examples}
@@ -92,8 +131,8 @@ def check_examples(schema, examples):
 
     def accept(value):
         nonlocal positive
-        errors = list(validator.iter_errors(value))
-        require(not errors, f"Invalid positive shape {value.get('kind')}: {[e.message for e in errors]}")
+        require(validator.is_valid(value),
+                f"Invalid positive shape {value.get('kind')}: {explain(schema, value)}")
         positive += 1
 
     def reject(value, label):
@@ -114,11 +153,37 @@ def check_examples(schema, examples):
     changed = deepcopy(by_kind["PrinterIdentity"])
     changed["validation_scope"] = "klipper_observed"
     reject(changed, "unknown firmware claiming Klipper observation")
+    for scope in ["klipper_static", "klipper_observed"]:
+        changed = deepcopy(by_kind["PrinterIdentity"])
+        changed.update(firmware="klipper", validation_scope=scope, identity_evidence_digests=[])
+        reject(changed, f"{scope} without identity evidence")
+    changed = deepcopy(by_kind["PrinterIdentity"])
+    changed.update(firmware="klipper", validation_scope="klipper_observed",
+                   identity_evidence_digests=[EXAMPLE_DIGEST], hardware_digest=None)
+    reject(changed, "klipper_observed without a declared hardware reference")
+    changed = deepcopy(by_kind["PrinterIdentity"])
+    changed.update(firmware="klipper", validation_scope="klipper_observed",
+                   identity_evidence_digests=[EXAMPLE_DIGEST], hardware_digest=EXAMPLE_DIGEST)
+    accept(changed)
 
-    for path in ["../outside.json", "nested/../../outside.json", "/absolute.json", "C:/outside.json", "file.json:secret", "..\\outside.json"]:
+    # Traversal and absolute/UNC/stream escapes, then Windows-specific aliasing: reserved
+    # device names in any case, trailing dot or space, empty segment, directory reference.
+    for path in ["../outside.json", "nested/../../outside.json", "/absolute.json", "C:/outside.json",
+                 "file.json:secret", "..\\outside.json",
+                 "NUL", "CON", "PRN", "AUX", "COM1", "LPT1.json", "nul.txt", "CoN",
+                 "aux/config.cfg", "dir/NUL",
+                 "process.json.", "process.json ", "dir/", "a//b.json", "a /b.json", "a./b.json"]:
         changed = deepcopy(by_kind["SourceSnapshot"])
         changed["files"][0]["path"] = path
-        reject(changed, f"escaping path {path}")
+        reject(changed, f"escaping or aliasing path {path}")
+    for path in ["console.json", "company.cfg", "nullable.json", "com10.cfg", "printer.cfg.bak"]:
+        changed = deepcopy(by_kind["SourceSnapshot"])
+        changed["files"][0]["path"] = path
+        accept(changed)
+
+    changed = deepcopy(by_kind["SourceSnapshot"])
+    changed["files"] = [changed["files"][0], deepcopy(changed["files"][0])]
+    reject(changed, "snapshot listing one file entry twice")
 
     receipt = deepcopy(by_kind["BackupReceipt"])
     receipt["status"] = "verified"
@@ -146,18 +211,39 @@ def check_examples(schema, examples):
     changed = deepcopy(complete)
     changed["captures"][0]["source_video_digest"] = changed["artifact_digest"]
     reject(changed, "video frame without timestamp")
+    changed = deepcopy(complete)
+    changed["captures"].append(deepcopy(changed["captures"][0]))
+    reject(changed, "bundle listing one capture twice")
 
     changed = deepcopy(by_kind["DiagnosticReport"])
     changed["outcome"] = "propose_bounded_change"
     reject(changed, "proposal outcome without proposal reference")
     changed = deepcopy(by_kind["ChangeProposal"])
-    changed["changes"] *= 2
+    second = deepcopy(changed["changes"][0])
+    second.update(key="a_second_fictional_parameter", current_value=3, proposed_value=4)
+    changed["changes"].append(second)
     reject(changed, "two independent changes")
     changed = deepcopy(by_kind["ChangeProposal"])
     changed["changes"][0]["domain"] = "klipper_audit_only"
     reject(changed, "bounded slicer proposal with Klipper domain")
+    for value in [None, "500", True]:
+        changed = deepcopy(by_kind["ChangeProposal"])
+        changed["changes"][0]["proposed_value"] = value
+        reject(changed, f"proposed value {value!r} disagreeing with the current value type")
+    # A null current_value records a key absent from the source, so type agreement does not
+    # apply; only the non-null rule stops the proposal from meaning "delete this key".
+    changed = deepcopy(by_kind["ChangeProposal"])
+    changed["changes"][0].update(current_value=None, proposed_value=None)
+    reject(changed, "null proposed value against an absent source key")
+    changed = deepcopy(by_kind["ChangeProposal"])
+    changed["changes"][0].update(current_value=None, proposed_value=2)
+    accept(changed)
 
-    for field in ["source_digest", "candidate_digest", "raw_gcode_digest", "toolchain_digest", "prompt_digest", "provider"]:
+    changed = deepcopy(by_kind["CalibrationDefinition"])
+    del changed["ranges"][0]["domain"]
+    reject(changed, "reviewed range without a domain to bind it to")
+
+    for field in ["source_digest", "candidate_digest", "proposal_digest", "raw_gcode_digest", "toolchain_digest", "prompt_digest", "provider"]:
         changed = deepcopy(by_kind["ApprovalRecord"])
         changed["bindings"][field] = None
         reject(changed, f"candidate approval missing {field}")
@@ -166,10 +252,14 @@ def check_examples(schema, examples):
     reject(changed, "GitHub approval without repository/review evidence")
     baseline = deepcopy(by_kind["ApprovalRecord"])
     baseline.update(scope="baseline_package_review", risk_scope="baseline_review")
-    baseline["bindings"].update(candidate_digest=None, prompt_digest=None, provider=None)
+    baseline["bindings"].update(candidate_digest=None, proposal_digest=None, prompt_digest=None, provider=None)
     accept(baseline)
-    baseline["bindings"]["candidate_digest"] = baseline["bindings"]["source_digest"]
-    reject(baseline, "baseline approval with candidate content")
+    changed = deepcopy(baseline)
+    changed["bindings"]["candidate_digest"] = changed["bindings"]["source_digest"]
+    reject(changed, "baseline approval with candidate content")
+    changed = deepcopy(baseline)
+    changed["bindings"]["proposal_digest"] = changed["bindings"]["source_digest"]
+    reject(changed, "baseline approval carrying a change proposal")
     changed = deepcopy(by_kind["ActivationObservation"])
     changed.update(verification="matched", firmware_scope="klipper_observed")
     reject(changed, "matched Klipper activation without loaded/runtime evidence")
@@ -188,46 +278,91 @@ def check_examples(schema, examples):
 
 
 def check_supplemental(schema, examples):
-    response_schema = {**schema, "oneOf": [{"$ref": "#/$defs/DiagnosticResponse"}]}
-    validator = Draft202012Validator(response_schema, format_checker=FORMATS, registry=Registry(retrieve=no_remote_schema))
+    validator = make_validator(subschema(schema, "DiagnosticResponse"))
+    positive = 0
+    negative = 0
+
+    def accept(value, label):
+        nonlocal positive
+        require(validator.is_valid(value), f"Rejected a valid model response: {label}")
+        positive += 1
+
+    def reject(value, label):
+        nonlocal negative
+        require(not validator.is_valid(value), f"Unexpectedly accepted: {label}")
+        negative += 1
+
     response = {
         "outcome": "insufficient_evidence", "observations": [], "measured_values": [],
         "hypotheses": [], "counterevidence": [], "missing_information": ["No real captures"],
         "confidence_limitations": ["Synthetic shape only"], "proposal": None,
     }
-    validator.validate(response)
+    accept(response, "abstention without a proposal")
     proposal = next(item for item in examples if item["kind"] == "ChangeProposal")
     response.update(outcome="propose_bounded_change", proposal={key: value for key, value in proposal.items()
                     if key not in {"schema_version", "kind", "id", "created_at"}})
-    validator.validate(response)
-    response["proposal"]["arbitrary_script"] = "must be rejected"
-    require(not validator.is_valid(response), "Model proposal accepted an unknown script field")
-    del response["proposal"]["arbitrary_script"]
-    response["created_at"] = "2026-09-12T12:00:00Z"
-    require(not validator.is_valid(response), "Model response accepted application-owned metadata")
+    accept(response, "bounded slicer proposal")
+
+    changed = deepcopy(response)
+    changed["proposal"]["arbitrary_script"] = "must be rejected"
+    reject(changed, "model proposal carrying an unknown script field")
+    changed = deepcopy(response)
+    changed["created_at"] = "2026-09-12T12:00:00Z"
+    reject(changed, "model response carrying application-owned metadata")
+
+    # The model must not be able to widen its own authority. These four shapes are the
+    # containment boundary between untrusted interpretation and the deterministic policy.
+    changed = deepcopy(response)
+    changed["proposal"]["risk"] = "elevated_proposal_only"
+    reject(changed, "model escalating its own proposal risk")
+    changed = deepcopy(response)
+    changed["proposal"]["changes"][0]["domain"] = "klipper_audit_only"
+    reject(changed, "model proposing a Klipper domain change")
+    changed = deepcopy(response)
+    changed["proposal"]["risk"] = "elevated_proposal_only"
+    changed["proposal"]["changes"][0]["domain"] = "klipper_audit_only"
+    reject(changed, "model reaching a Klipper domain through an elevated risk level")
+    for outcome in ["no_change", "insufficient_evidence", "manual_hardware_check"]:
+        changed = deepcopy(response)
+        changed["outcome"] = outcome
+        reject(changed, f"model attaching a proposal to a {outcome} outcome")
 
     digest = "sha256:" + "a" * 64
-    toolchain_schema = {**schema, "oneOf": [{"$ref": "#/$defs/ToolchainManifest"}]}
-    toolchain_validator = Draft202012Validator(toolchain_schema, registry=Registry(retrieve=no_remote_schema))
+    toolchain_validator = make_validator(subschema(schema, "ToolchainManifest"))
     toolchain = {key: digest for key in schema["$defs"]["ToolchainManifest"]["required"] if key.endswith("_digest")}
     toolchain.update(slicer_version="synthetic", binary_dependency_digests=[], os="fictional", architecture="fictional", argv=[])
-    toolchain_validator.validate(toolchain)
-    del toolchain["executable_digest"]
-    require(not toolchain_validator.is_valid(toolchain), "Toolchain accepted missing binary identity")
-    return 3, 3
+    require(toolchain_validator.is_valid(toolchain), "Rejected a valid toolchain manifest")
+    positive += 1
+    changed = deepcopy(toolchain)
+    del changed["executable_digest"]
+    require(not toolchain_validator.is_valid(changed), "Toolchain accepted missing binary identity")
+    negative += 1
+    return positive, negative
+
+
+def strip_code(text):
+    """Drop fenced and inline code so example link syntax is not checked as a real link."""
+    text = re.sub(r"^```.*?^```", "", text, flags=re.DOTALL | re.MULTILINE)
+    return re.sub(r"`[^`\n]*`", "", text)
 
 
 def check_links():
     count = 0
-    files = [ROOT / "README.md", *sorted((ROOT / "docs").rglob("*.md"))]
+    # The supplied prompt is byte-frozen and is never edited to satisfy a link check.
+    files = sorted(path for path in ROOT.rglob("*.md")
+                   if path.name != "ROOKERY_ASTRA_BUILD_PROMPT.md"
+                   and not any(part.startswith(".") for part in path.relative_to(ROOT).parts))
     for path in files:
-        text = path.read_text(encoding="utf-8")
-        for target in re.findall(r"\[[^\]]+\]\(([^)]+)\)", text):
+        text = strip_code(path.read_text(encoding="utf-8"))
+        require(not re.search(r"\]\[[^\]]+\]", text),
+                f"Reference-style link is not validated by this checker: {path.name}")
+        for target in re.findall(r"\[[^\]]*\]\(([^)]+)\)", text):
             if re.match(r"[a-z]+:", target) or target.startswith("#"):
                 continue
+            relative = path.relative_to(ROOT)
             target_path = (path.parent / target.split("#", 1)[0]).resolve()
-            require(target_path.is_relative_to(ROOT), f"Link escapes repository: {path.name}: {target}")
-            require(target_path.is_file(), f"Missing link: {path.name}: {target}")
+            require(target_path.is_relative_to(ROOT), f"Link escapes repository: {relative}: {target}")
+            require(target_path.is_file(), f"Missing link: {relative}: {target}")
             count += 1
     return count
 
@@ -250,4 +385,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except ValueError as error:
+        # An expected check failure is a result, not a crash; report it without a traceback.
+        print(f"FAIL: {error}", file=sys.stderr)
+        raise SystemExit(1)

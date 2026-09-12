@@ -32,7 +32,7 @@
     "license_review_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
     "orientation_placement_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
     "feature_manifest_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    "ranges": [], "metrics": [{"name": "fictional_quality", "units": "rubric_level", "method": "human_rubric", "lower_bound": 1, "upper_bound": 3, "tolerance": 0}],
+    "ranges": [{"domain": "orca_process", "parameter": "fictional_parameter_not_an_orca_key", "units": "fictional_units", "minimum": 1, "maximum": 2, "review_digest": "sha256:8888888888888888888888888888888888888888888888888888888888888888"}], "metrics": [{"name": "fictional_quality", "units": "rubric_level", "method": "human_rubric", "lower_bound": 1, "upper_bound": 3, "tolerance": 0}],
     "budgets": {"max_experiments": 1, "max_requests": 0, "max_retries": 0, "max_frames": 6, "max_tokens": 0, "max_storage_bytes": 1000000, "max_estimated_seconds": 1, "max_material_grams": 1},
     "controls_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
     "stop_conditions": ["No licensed project, real review, hardware bounds or physical permission exists."]
@@ -42,7 +42,7 @@
     "experiment_id": "synthetic-experiment", "revision": 1, "state": "DISCOVERED",
     "bindings": {
       "printer_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "source_digest": null, "candidate_digest": null, "toolchain_digest": null, "calibration_digest": null,
+      "source_digest": null, "candidate_digest": null, "proposal_digest": null, "toolchain_digest": null, "calibration_digest": null,
       "raw_gcode_digest": null, "effective_settings_digest": null, "evidence_digests": [],
       "policy_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "prompt_digest": null, "provider": null
     },
@@ -97,6 +97,7 @@
       "printer_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
       "source_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       "candidate_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "proposal_digest": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
       "toolchain_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
       "calibration_digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
       "raw_gcode_digest": "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
@@ -126,7 +127,7 @@
     "schema_version": "0.1.0", "kind": "ExperimentResult", "id": "synthetic-inconclusive-result", "created_at": "2026-09-12T12:00:00Z",
     "experiment_id": "synthetic-experiment", "bindings": {
       "printer_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "source_digest": null, "candidate_digest": null, "toolchain_digest": null, "calibration_digest": null,
+      "source_digest": null, "candidate_digest": null, "proposal_digest": null, "toolchain_digest": null, "calibration_digest": null,
       "raw_gcode_digest": null, "effective_settings_digest": null, "evidence_digests": [],
       "policy_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "prompt_digest": null, "provider": null
     },
