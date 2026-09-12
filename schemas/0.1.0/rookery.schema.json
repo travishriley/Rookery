@@ -24,8 +24,10 @@
     "Text": {"type": "string", "minLength": 1, "maxLength": 16384},
     "Texts": {"type": "array", "items": {"$ref": "#/$defs/Text"}, "maxItems": 1000},
     "Time": {"type": "string", "format": "date-time", "pattern": "Z$"},
-    "Path": {"type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[:\\\\])[A-Za-z0-9_./ -]+$"},
+    "Path": {"type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[:\\\\])(?!.*//)(?!.*/$)(?!.*[ .](?:/|$))(?!.*(?:^|/)(?:[Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])(?:\\.[^/]*)?(?:/|$))[A-Za-z0-9_./ -]+$"},
     "Scalar": {"type": ["string", "number", "boolean", "null"]},
+    "NonNullScalar": {"type": ["string", "number", "boolean"]},
+    "ChangeDomain": {"enum": ["orca_printer", "orca_filament", "orca_process", "klipper_audit_only"]},
     "Base": {
       "type": "object",
       "required": ["schema_version", "kind", "id", "created_at"],
@@ -62,11 +64,12 @@
     },
     "Bindings": {
       "type": "object", "additionalProperties": false,
-      "required": ["printer_digest", "source_digest", "candidate_digest", "toolchain_digest", "calibration_digest", "raw_gcode_digest", "effective_settings_digest", "evidence_digests", "policy_digest", "prompt_digest", "provider"],
+      "required": ["printer_digest", "source_digest", "candidate_digest", "proposal_digest", "toolchain_digest", "calibration_digest", "raw_gcode_digest", "effective_settings_digest", "evidence_digests", "policy_digest", "prompt_digest", "provider"],
       "properties": {
         "printer_digest": {"$ref": "#/$defs/Digest"},
         "source_digest": {"$ref": "#/$defs/MaybeDigest"},
         "candidate_digest": {"$ref": "#/$defs/MaybeDigest"},
+        "proposal_digest": {"$ref": "#/$defs/MaybeDigest"},
         "toolchain_digest": {"$ref": "#/$defs/MaybeDigest"},
         "calibration_digest": {"$ref": "#/$defs/MaybeDigest"},
         "raw_gcode_digest": {"$ref": "#/$defs/MaybeDigest"},
@@ -92,6 +95,7 @@
       "allOf": [{"$ref": "#/$defs/PackageBindings"}],
       "properties": {
         "candidate_digest": {"$ref": "#/$defs/Digest"},
+        "proposal_digest": {"$ref": "#/$defs/Digest"},
         "prompt_digest": {"$ref": "#/$defs/Digest"},
         "provider": {"$ref": "#/$defs/Provider"}
       }
@@ -131,8 +135,9 @@
     },
     "Range": {
       "type": "object", "additionalProperties": false,
-      "required": ["parameter", "units", "minimum", "maximum", "review_digest"],
+      "required": ["domain", "parameter", "units", "minimum", "maximum", "review_digest"],
       "properties": {
+        "domain": {"$ref": "#/$defs/ChangeDomain"},
         "parameter": {"$ref": "#/$defs/Text"}, "units": {"$ref": "#/$defs/Text"},
         "minimum": {"type": "number"}, "maximum": {"type": "number"},
         "review_digest": {"$ref": "#/$defs/Digest"}
@@ -188,18 +193,26 @@
       "type": "object", "additionalProperties": false,
       "required": ["domain", "file_digest", "path", "key", "current_value", "proposed_value", "units", "evidence_digests"],
       "properties": {
-        "domain": {"enum": ["orca_printer", "orca_filament", "orca_process", "klipper_audit_only"]},
+        "domain": {"$ref": "#/$defs/ChangeDomain"},
         "file_digest": {"$ref": "#/$defs/Digest"}, "path": {"$ref": "#/$defs/Path"},
         "key": {"$ref": "#/$defs/Text"}, "current_value": {"$ref": "#/$defs/Scalar"},
-        "proposed_value": {"$ref": "#/$defs/Scalar"}, "units": {"$ref": "#/$defs/Text"},
+        "proposed_value": {"$ref": "#/$defs/NonNullScalar"}, "units": {"$ref": "#/$defs/Text"},
         "evidence_digests": {"allOf": [{"$ref": "#/$defs/Digests"}], "minItems": 1}
-      }
+      },
+      "allOf": [
+        {"if": {"required": ["current_value"], "properties": {"current_value": {"type": "string"}}},
+         "then": {"properties": {"proposed_value": {"type": "string"}}}},
+        {"if": {"required": ["current_value"], "properties": {"current_value": {"type": "number"}}},
+         "then": {"properties": {"proposed_value": {"type": "number"}}}},
+        {"if": {"required": ["current_value"], "properties": {"current_value": {"type": "boolean"}}},
+         "then": {"properties": {"proposed_value": {"type": "boolean"}}}}
+      ]
     },
     "State": {
       "enum": ["DISCOVERED", "SNAPSHOT_VERIFIED", "AUDITED", "BASELINE_PACKAGE_REVIEWED", "AWAITING_HUMAN_BASELINE_PRINT", "BASELINE_EVIDENCE_ACCEPTED", "DIAGNOSED", "CANDIDATE_STAGED", "VALIDATED", "AWAITING_APPROVAL", "APPROVED_FOR_EXPORT", "AWAITING_HUMAN_IMPORT_AND_ACTIVATION", "ACTIVATION_OBSERVED", "AWAITING_HUMAN_CANDIDATE_PRINT", "CANDIDATE_EVIDENCE_ACCEPTED", "COMPARED", "PROMOTED", "REJECTED", "INSUFFICIENT_EVIDENCE", "UNSAFE_BASELINE", "APPROVAL_EXPIRED", "CONFIGURATION_DRIFT", "BACKUP_FAILED", "INTERRUPTED", "MANUAL_CHECK_NEEDED", "BUDGET_EXHAUSTED", "NO_CHANGE"]
     },
     "PrinterIdentity": {
-      "allOf": [{"$ref": "#/$defs/Base"}], "unevaluatedProperties": false,
+      "unevaluatedProperties": false,
       "required": ["label", "firmware", "validation_scope", "hardware_digest", "identity_evidence_digests"],
       "properties": {
         "kind": {"const": "PrinterIdentity"}, "label": {"$ref": "#/$defs/Text"},
@@ -207,8 +220,13 @@
         "validation_scope": {"enum": ["slicer_only", "klipper_static", "klipper_observed"]},
         "hardware_digest": {"$ref": "#/$defs/MaybeDigest"}, "identity_evidence_digests": {"$ref": "#/$defs/Digests"}
       },
-      "if": {"properties": {"validation_scope": {"enum": ["klipper_static", "klipper_observed"]}}},
-      "then": {"properties": {"firmware": {"const": "klipper"}}}
+      "allOf": [
+        {"$ref": "#/$defs/Base"},
+        {"if": {"properties": {"validation_scope": {"enum": ["klipper_static", "klipper_observed"]}}},
+         "then": {"properties": {"firmware": {"const": "klipper"}, "identity_evidence_digests": {"minItems": 1}}}},
+        {"if": {"properties": {"validation_scope": {"const": "klipper_observed"}}},
+         "then": {"properties": {"hardware_digest": {"$ref": "#/$defs/Digest"}}}}
+      ]
     },
     "SourceSnapshot": {
       "allOf": [{"$ref": "#/$defs/Base"}], "unevaluatedProperties": false,
@@ -217,7 +235,7 @@
         "kind": {"const": "SourceSnapshot"}, "printer_digest": {"$ref": "#/$defs/Digest"},
         "content_manifest_digest": {"$ref": "#/$defs/Digest"}, "capture_started_at": {"$ref": "#/$defs/Time"},
         "capture_finished_at": {"$ref": "#/$defs/Time"}, "complete": {"type": "boolean"},
-        "files": {"type": "array", "items": {"$ref": "#/$defs/FileEntry"}, "minItems": 1, "maxItems": 10000},
+        "files": {"type": "array", "items": {"$ref": "#/$defs/FileEntry"}, "minItems": 1, "maxItems": 10000, "uniqueItems": true},
         "edges": {"type": "array", "items": {"$ref": "#/$defs/Edge"}, "maxItems": 100000},
         "provenance_digest": {"$ref": "#/$defs/Digest"}, "issues": {"$ref": "#/$defs/Texts"}
       }
@@ -280,7 +298,7 @@
       "properties": {
         "kind": {"const": "EvidenceBundle"}, "experiment_id": {"$ref": "#/$defs/Id"},
         "run_id": {"$ref": "#/$defs/Id"}, "artifact_digest": {"$ref": "#/$defs/Digest"},
-        "captures": {"type": "array", "items": {"$ref": "#/$defs/Capture"}, "maxItems": 1000},
+        "captures": {"type": "array", "items": {"$ref": "#/$defs/Capture"}, "maxItems": 1000, "uniqueItems": true},
         "measurements": {"type": "array", "items": {"$ref": "#/$defs/Measurement"}, "maxItems": 1000},
         "coverage": {"enum": ["incomplete", "complete", "invalid"]},
         "bottom_cooled_and_removed_observed": {"type": "boolean"},
@@ -367,7 +385,7 @@
       },
       "allOf": [
         {"$ref": "#/$defs/Base"},
-        {"if": {"properties": {"scope": {"const": "baseline_package_review"}}}, "then": {"properties": {"bindings": {"properties": {"candidate_digest": {"type": "null"}}}, "risk_scope": {"const": "baseline_review"}}}},
+        {"if": {"properties": {"scope": {"const": "baseline_package_review"}}}, "then": {"properties": {"bindings": {"properties": {"candidate_digest": {"type": "null"}, "proposal_digest": {"type": "null"}}}, "risk_scope": {"const": "baseline_review"}}}},
         {"if": {"properties": {"scope": {"enum": ["candidate_export", "test_package_review"]}}}, "then": {"properties": {"bindings": {"$ref": "#/$defs/CandidateBindings"}, "risk_scope": {"const": "bounded_slicer_change"}}}},
         {"if": {"properties": {"authentication_mode": {"const": "github_human"}}}, "then": {"properties": {"repository_id": {"type": "integer", "minimum": 1}, "review_evidence_digest": {"$ref": "#/$defs/Digest"}}}}
       ]

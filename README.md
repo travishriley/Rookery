@@ -23,11 +23,14 @@ Only synthetic examples belong in this public repository. Private printer record
 
 ## Design Checks
 
-Observed environment: Windows 11 AMD64, Python 3.13.7. Existing validator dependencies are recorded in [requirements-design.txt](requirements-design.txt). These are design tooling versions, not a product support promise.
+Requires Python 3.11 or newer; the checker exits with that message on older interpreters. Observed environment: Windows 11 AMD64, Python 3.13.7. Existing validator dependencies are recorded in [requirements-design.txt](requirements-design.txt). These are design tooling versions, not a product support promise.
+
+The install below writes into whichever environment is currently active; create a virtual environment first if that matters to you.
 
 ```powershell
+python -m pip install -r requirements-design.txt
 python tools/check_design.py
-git diff --check
+git diff --cached --check
 ```
 
 These checks validate documents and schema shape. They do not validate a printer, slicer runtime, access sandbox, approval authenticity, or physical print quality. Future product acceptance criteria are specifications, not passing test claims.
