@@ -6,7 +6,7 @@ The [owner's engineering requirements](ROOKERY_ASTRA_BUILD_PROMPT.md) are preser
 
 ## Design Review
 
-Tracking: [issue #1](https://github.com/travishriley/Rookery/issues/1), branch `design/1-phase-0`.
+Tracking: [design PR #14](https://github.com/travishriley/Rookery/pull/14), [issue #1](https://github.com/travishriley/Rookery/issues/1), branch `design/1-phase-0`. The PR is open for human review and has not been merged.
 
 1. [Inventory and capability evidence](docs/design/inventory-and-capabilities.md)
 2. [Requirements and traceability](docs/design/requirements.md)

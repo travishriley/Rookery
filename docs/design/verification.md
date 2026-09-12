@@ -21,6 +21,10 @@ Executed successfully: 225 local schema references, 17 positive shapes (eleven r
 
 No CI workflow, product behavior test, independent backup/restore, worker isolation, actual slicer help/slicing, provider request or hardware-quality test has run. Synthetic receipts/approvals/results are examples only and do not claim that those operations occurred.
 
+## Published Review
+
+[PR #14](https://github.com/travishriley/Rookery/pull/14) links [issue #1](https://github.com/travishriley/Rookery/issues/1), from `design/1-phase-0` to `main`. Authenticated GitHub read-back confirmed OPEN, non-draft, unmerged, `auto_merge: null`, no review decision, and an empty check rollup. Its twenty changed filenames match the staged design package; temporary publication payloads remain ignored locally. The twelve implementation/deferred-risk issues and six phase milestones were created and linked in the backlog. No self-approval, merge, protection change, or Phase 1 implementation was performed.
+
 ## Unresolved Release Risks
 
 Actual Orca CLI/plugin compatibility and worker boundary, unspecified printer/firmware identity and numeric policy, backup topology/encryption/key recovery, local human versus automation approval identity, source/runtime precedence, provider/privacy behavior, licensing, and repository review/protection configuration all require later evidence. They are tracked in [backlog.md](backlog.md) and [decisions.md](decisions.md). Phase 0 does not claim they are resolved by documents or schemas.
