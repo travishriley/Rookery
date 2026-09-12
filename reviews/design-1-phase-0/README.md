@@ -11,6 +11,7 @@ Review of [PR #14 "Phase 0: offline architecture, safety boundaries, and data co
 | Review date | 2026-09-12 |
 | Reviewer | Claude Opus 5 (automated review) |
 | Verdict | **Approve with changes.** No blocking defect. 4 safety/security items should land before B01. |
+| Status | All 18 findings resolved or answered in `2b53adf` / `a705c44` — see [07-resolution.md](07-resolution.md). |
 
 ## Contents
 
@@ -23,6 +24,7 @@ Review of [PR #14 "Phase 0: offline architecture, safety boundaries, and data co
 | [04-maintainability.md](04-maintainability.md) | Code quality and best practice in `tools/check_design.py` and the schema |
 | [05-what-is-good.md](05-what-is-good.md) | Things that are right and should not be refactored away |
 | [06-verification-log.md](06-verification-log.md) | Every command run, with raw output |
+| [07-resolution.md](07-resolution.md) | How each finding was resolved, and what was deliberately left open |
 | [evidence/](evidence/) | Re-runnable probe scripts backing each finding |
 
 ## How to reproduce
