@@ -173,7 +173,7 @@ def check_examples(schema, examples):
     for path in ["../outside.json", "nested/../../outside.json", "/absolute.json", "C:/outside.json",
                  "file.json:secret", "..\\outside.json",
                  "NUL", "CON", "PRN", "AUX", "COM1", "LPT1.json", "nul.txt", "CoN",
-                 "aux/config.cfg", "dir/NUL",
+                 "aux/config.cfg", "dir/NUL", "NUL .cfg", "dir/CON .txt",
                  "process.json.", "process.json ", "dir/", "a//b.json", "a /b.json", "a./b.json",
                  "process.json\n", "process.json\r\n", "dir/\nfile.json"]:
         changed = deepcopy(by_kind["SourceSnapshot"])

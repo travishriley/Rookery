@@ -29,7 +29,9 @@ class DesignReviewTests(unittest.TestCase):
     def test_windows_path_terminator(self):
         validator = design.make_validator(design.subschema(self.schema, "Path"))
         self.assertTrue(validator.is_valid("nested/printer.cfg"))
-        for value in ["printer.cfg\n", "printer.cfg\r\n", "nested/NUL", "nested./printer.cfg"]:
+        self.assertTrue(validator.is_valid("normal file.cfg"))
+        for value in ["printer.cfg\n", "printer.cfg\r\n", "nested/NUL", "nested./printer.cfg",
+                      "NUL .cfg", "dir/CON .txt"]:
             with self.subTest(value=value):
                 self.assertFalse(validator.is_valid(value))
 

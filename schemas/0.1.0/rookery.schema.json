@@ -24,7 +24,7 @@
     "Text": {"type": "string", "minLength": 1, "maxLength": 16384},
     "Texts": {"type": "array", "items": {"$ref": "#/$defs/Text"}, "maxItems": 1000},
     "Time": {"type": "string", "format": "date-time", "pattern": "Z$"},
-    "Path": {"type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[:\\\\])(?!.*//)(?!.*/$)(?!.*[ .](?:/|$))(?!.*(?:^|/)(?:[Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])(?:\\.[^/]*)?(?:/|$))[A-Za-z0-9_./ -]+$(?![\\s\\S])"},
+    "Path": {"type": "string", "minLength": 1, "maxLength": 1024, "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*[:\\\\])(?!.*//)(?!.*/$)(?!.*[ .](?:/|$))(?!.*(?:^|/)(?:[Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])[ ]*(?:\\.[^/]*)?(?:/|$))[A-Za-z0-9_./ -]+$(?![\\s\\S])"},
     "Scalar": {"type": ["string", "number", "boolean", "null"]},
     "NonNullScalar": {"type": ["string", "number", "boolean"]},
     "ChangeDomain": {"enum": ["orca_printer", "orca_filament", "orca_process", "klipper_audit_only"]},
