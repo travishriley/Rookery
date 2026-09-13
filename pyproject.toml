@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rookery-core"
+version = "0.1.0.dev1"
+description = "Offline Rookery record validation foundation; no printer integration"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "attrs==25.3.0",
+    "jsonschema==4.25.1",
+    "jsonschema-specifications==2025.4.1",
+    "referencing==0.36.2",
+    "rpds-py==0.27.0",
+]
+
+[tool.setuptools]
+packages = ["rookery", "rookery.schemas"]
+include-package-data = false
+
+[tool.setuptools.package-dir]
+rookery = "src/rookery"
+"rookery.schemas" = "schemas"
+
+[tool.setuptools.package-data]
+rookery = ["py.typed"]
+"rookery.schemas" = ["0.1.0/rookery.schema.json"]

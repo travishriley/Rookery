@@ -1,6 +1,6 @@
 # Implementation Backlog
 
-Status: proposed, sequenced work after human review of Phase 0. All tracking issues and milestones below have been created. No issue's presence authorizes printer access or later phases. Each implementation issue should produce a small PR with its own acceptance evidence.
+Status: sequenced work after owner-approved merge of Phase 0 PR #14. B01's [first contract-foundation slice](../implementation/b01-contract-foundation.md) is in progress; B01 is not yet complete. All tracking issues and milestones below have been created. No issue's presence authorizes printer access or later phases. Each implementation issue should produce a small PR with its own acceptance evidence.
 
 GitHub issues: [B01 #2](https://github.com/travishriley/Rookery/issues/2), [B02 #3](https://github.com/travishriley/Rookery/issues/3), [B03 #4](https://github.com/travishriley/Rookery/issues/4), [B04 #5](https://github.com/travishriley/Rookery/issues/5), [B05 #6](https://github.com/travishriley/Rookery/issues/6), [B06 #7](https://github.com/travishriley/Rookery/issues/7), [B07 #8](https://github.com/travishriley/Rookery/issues/8), [B08 #9](https://github.com/travishriley/Rookery/issues/9), [B09 #10](https://github.com/travishriley/Rookery/issues/10), [B10 #11](https://github.com/travishriley/Rookery/issues/11), [B11 #12](https://github.com/travishriley/Rookery/issues/12), [B12 #13](https://github.com/travishriley/Rookery/issues/13).
 
