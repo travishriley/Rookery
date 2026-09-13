@@ -1,0 +1,29 @@
+.phase0-local/
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# Private records belong outside the repository; these are secondary safeguards.
+private/
+records/
+backups/
+staging/
+.env
+.env.*
+!.env.example
+# Evidence, captures and machine artifacts are private regardless of location (H08).
+# Location-independent because a stray capture in the repository root is the likely mistake.
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.mp4
+*.mov
+*.gcode
+*.3mf
+*.stl
+*.cfg
+*.sqlite
+*.sqlite-*
+*.db
