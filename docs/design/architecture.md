@@ -1,6 +1,6 @@
 # Architecture
 
-Status: proposed. The repository contains design and validation tooling only. Component names are proposed Python module boundaries, not existing APIs.
+Status: reviewed Phase 0 architecture. Component names below remain proposed Python module boundaries, not existing integration APIs. The first [B01 contract foundation](../implementation/b01-contract-foundation.md) adds in-memory schema parsing only; the other components remain unimplemented.
 
 ```mermaid
 flowchart LR

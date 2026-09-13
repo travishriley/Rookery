@@ -4,6 +4,9 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+build/
+dist/
+*.egg-info/
 # Private records belong outside the repository; these are secondary safeguards.
 private/
 records/

@@ -17,10 +17,10 @@
     {"$ref": "#/$defs/ExperimentResult"}
   ],
   "$defs": {
-    "Digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "Digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$(?![\\s\\S])"},
     "MaybeDigest": {"oneOf": [{"$ref": "#/$defs/Digest"}, {"type": "null"}]},
     "Digests": {"type": "array", "items": {"$ref": "#/$defs/Digest"}, "uniqueItems": true, "maxItems": 10000},
-    "Id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"},
+    "Id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$(?![\\s\\S])"},
     "Text": {"type": "string", "minLength": 1, "maxLength": 16384},
     "Texts": {"type": "array", "items": {"$ref": "#/$defs/Text"}, "maxItems": 1000},
     "Time": {"type": "string", "format": "date-time", "pattern": "Z$"},

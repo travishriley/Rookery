@@ -1,0 +1,5 @@
+# Reuse the reviewed design validator pins; install only into a development environment.
+-r requirements-design.txt
+pip==25.2
+setuptools==80.9.0
+PyYAML==6.0.3

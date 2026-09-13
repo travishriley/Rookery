@@ -152,6 +152,11 @@ def check_examples(schema, examples):
         del changed["id"]
         reject(changed, f"{example['kind']} missing id")
 
+    for field, value in [("id", "synthetic\n"), ("hardware_digest", EXAMPLE_DIGEST + "\n")]:
+        changed = deepcopy(by_kind["PrinterIdentity"])
+        changed[field] = value
+        reject(changed, f"trailing newline in {field}")
+
     changed = deepcopy(by_kind["PrinterIdentity"])
     changed["validation_scope"] = "klipper_observed"
     reject(changed, "unknown firmware claiming Klipper observation")
